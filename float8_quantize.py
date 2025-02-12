@@ -16,11 +16,6 @@ if LT_TORCH_2_4:
         raise RuntimeError(
             "This version of PyTorch is not supported. Please upgrade to PyTorch 2.4 with CUDA 12.4 or later."
         )
-CUDA_VERSION = float(cuda) if cuda else 0
-if CUDA_VERSION < 12.4:
-    raise RuntimeError(
-        f"This version of PyTorch is not supported. Please upgrade to PyTorch 2.4 with CUDA 12.4 or later got torch version {__version__} and CUDA version {cuda}."
-    )
 try:
     from cublas_ops import CublasLinear
 except ImportError:
@@ -36,11 +31,11 @@ class F8Linear(nn.Module):
         bias: bool = True,
         device=None,
         dtype=torch.float16,
-        float8_dtype=torch.float8_e4m3fn,
+        float8_dtype=torch.float8_e4m3fnuz,
         float_weight: torch.Tensor = None,
         float_bias: torch.Tensor = None,
         num_scale_trials: int = 12,
-        input_float8_dtype=torch.float8_e5m2,
+        input_float8_dtype=torch.float8_e4m3fnuz,
     ) -> None:
         super().__init__()
         self.in_features = in_features
@@ -299,8 +294,8 @@ class F8Linear(nn.Module):
     def from_linear(
         cls,
         linear: nn.Linear,
-        float8_dtype=torch.float8_e4m3fn,
-        input_float8_dtype=torch.float8_e5m2,
+        float8_dtype=torch.float8_e4m3fnuz,
+        input_float8_dtype=torch.float8_e4m3fnuz,
     ) -> "F8Linear":
         f8_lin = cls(
             in_features=linear.in_features,
@@ -320,8 +315,8 @@ class F8Linear(nn.Module):
 @torch.inference_mode()
 def recursive_swap_linears(
     model: nn.Module,
-    float8_dtype=torch.float8_e4m3fn,
-    input_float8_dtype=torch.float8_e5m2,
+    float8_dtype=torch.float8_e4m3fnuz,
+    input_float8_dtype=torch.float8_e4m3fnuz,
     quantize_modulation: bool = True,
     ignore_keys: list[str] = [],
 ) -> None:
@@ -396,8 +391,8 @@ def swap_to_cublaslinear(model: nn.Module):
 def quantize_flow_transformer_and_dispatch_float8(
     flow_model: nn.Module,
     device=torch.device("cuda"),
-    float8_dtype=torch.float8_e4m3fn,
-    input_float8_dtype=torch.float8_e5m2,
+    float8_dtype=torch.float8_e4m3fnuz,
+    input_float8_dtype=torch.float8_e4m3fnuz,
     offload_flow=False,
     swap_linears_with_cublaslinear=True,
     flow_dtype=torch.float16,
